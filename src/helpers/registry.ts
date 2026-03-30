@@ -112,3 +112,28 @@ export function normalizeRegistry(registry: string) {
 export function normalizeRegistryKey(registryKey: string) {
   return registryKey.endsWith('/') ? registryKey : `${registryKey}/`
 }
+
+export function createRegistryAuthKey(registry: string) {
+  const url = new URL(normalizeRegistry(registry))
+  const pathname = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`
+
+  return `//${url.host}${pathname}`
+}
+
+export function resolveRegistryAuth(
+  registry: string,
+  authByRegistry: Record<string, RegistryAuthConfig>,
+) {
+  const registryKey = createRegistryAuthKey(registry)
+
+  let matchedRegistryKey: string | undefined
+  for (const candidateKey of Object.keys(authByRegistry)) {
+    if (!registryKey.startsWith(candidateKey))
+      continue
+
+    if (!matchedRegistryKey || candidateKey.length > matchedRegistryKey.length)
+      matchedRegistryKey = candidateKey
+  }
+
+  return matchedRegistryKey ? authByRegistry[matchedRegistryKey] : undefined
+}

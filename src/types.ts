@@ -1,3 +1,8 @@
+import type {
+  GetLatestVersionOptions as FastGetLatestVersionOptions,
+  GetVersionsOptions as FastGetVersionsOptions,
+} from 'fast-npm-meta'
+
 export interface NpmConfigOptions {
   /**
    * Working directory used to locate the default project `.npmrc`.
@@ -150,6 +155,36 @@ export interface NpaResult {
   rawSpec: string
 }
 
-export interface RequestOptions {
+/**
+ * Options for `getLatestVersion()` and `getLatestVersionBatch()`.
+ *
+ * This extends `fast-npm-meta`'s latest-version options with npm config
+ * loading controls for registry resolution.
+ */
+export interface GetLatestVersionOptions<Metadata extends boolean = false, Throw extends boolean = true>
+  extends NpmConfigOptions, FastGetLatestVersionOptions<Metadata, Throw> {}
 
-}
+/**
+ * Options for `getVersions()` and `getVersionsBatch()`.
+ *
+ * This extends `fast-npm-meta`'s versions options with npm config loading
+ * controls for registry resolution.
+ */
+export interface GetVersionsOptions<Metadata extends boolean = false, Throw extends boolean = true>
+  extends NpmConfigOptions, FastGetVersionsOptions<Metadata, Throw> {}
+
+export type {
+  FetchOptions,
+  InferGetLatestVersionResult,
+  InferGetVersionsResult,
+  MaybeError,
+  PackageError,
+  PackageManifest,
+  PackageManifestError,
+  PackageVersionMeta,
+  PackageVersionsInfo,
+  PackageVersionsInfoWithMetadata,
+  ResolvedPackageVersion,
+  ResolvedPackageVersionWithMetadata,
+  RetryOptions,
+} from 'fast-npm-meta'

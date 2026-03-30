@@ -4,7 +4,11 @@ export default defineConfig({
   catalogRules: mergeCatalogRules([
     {
       name: 'inlined',
-      match: ['validate-npm-package-name'],
+      match: [
+        'p-retry',
+        'semver-es',
+        'validate-npm-package-name',
+      ],
       priority: 0,
     },
   ]),

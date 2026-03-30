@@ -10,6 +10,8 @@ catalogs:
     tsx: ^4.21.0
     typescript: ^6.0.2
   inlined:
+    p-retry: ^8.0.0
+    semver-es: ^0.1.0
     validate-npm-package-name: ^7.0.2
   lint:
     '@octohash/eslint-config': ^0.2.9

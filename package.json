@@ -17,11 +17,9 @@
   "keywords": [
     "npm",
     "registry",
-    "metadata",
     "package",
-    "registry",
-    "config",
-    "client"
+    "metadata",
+    "information"
   ],
   "sideEffects": false,
   "exports": {
@@ -45,8 +43,7 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "fast-npm-meta": "catalog:prod",
-    "@types/validate-npm-package-name": "catalog:types"
+    "fast-npm-meta": "catalog:prod"
   },
   "devDependencies": {
     "tsdown": "catalog:build",
@@ -56,12 +53,15 @@
     "taze": "catalog:dev",
     "tsx": "catalog:dev",
     "typescript": "catalog:dev",
+    "p-retry": "catalog:inlined",
+    "semver-es": "catalog:inlined",
     "validate-npm-package-name": "catalog:inlined",
     "@octohash/eslint-config": "catalog:lint",
     "eslint": "catalog:lint",
     "lint-staged": "catalog:lint",
     "vitest": "catalog:test",
-    "@types/node": "catalog:types"
+    "@types/node": "catalog:types",
+    "@types/validate-npm-package-name": "catalog:types"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
@@ -70,6 +70,7 @@
     "*": "eslint --fix"
   },
   "inlinedDependencies": {
+    "semver-es": "^0.1.0",
     "validate-npm-package-name": "7.0.2"
   }
 }

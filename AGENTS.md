@@ -19,7 +19,7 @@
   - It should compose helpers from `src/helpers/`, apply source precedence, and return the request-facing config shape.
   - Avoid embedding low-level parsing helpers directly in this file.
 
-- `src/api.ts`
+- `src/api/`
   - High-level request helpers belong here.
   - Registry picking should rely on `fast-npm-meta` rather than a local reimplementation.
 
