@@ -1,6 +1,6 @@
 import type {
-  GetLatestVersionOptions as FastGetLatestVersionOptions,
-  GetVersionsOptions as FastGetVersionsOptions,
+  GetLatestVersionOptions as DefaultRegistryGetLatestVersionOptions,
+  GetVersionsOptions as DefaultRegistryGetVersionsOptions,
 } from 'fast-npm-meta'
 
 export interface NpmConfigOptions {
@@ -162,7 +162,7 @@ export interface NpaResult {
  * loading controls for registry resolution.
  */
 export interface GetLatestVersionOptions<Metadata extends boolean = false, Throw extends boolean = true>
-  extends NpmConfigOptions, FastGetLatestVersionOptions<Metadata, Throw> {}
+  extends NpmConfigOptions, DefaultRegistryGetLatestVersionOptions<Metadata, Throw> {}
 
 /**
  * Options for `getVersions()` and `getVersionsBatch()`.
@@ -171,7 +171,7 @@ export interface GetLatestVersionOptions<Metadata extends boolean = false, Throw
  * controls for registry resolution.
  */
 export interface GetVersionsOptions<Metadata extends boolean = false, Throw extends boolean = true>
-  extends NpmConfigOptions, FastGetVersionsOptions<Metadata, Throw> {}
+  extends NpmConfigOptions, DefaultRegistryGetVersionsOptions<Metadata, Throw> {}
 
 export type {
   FetchOptions,

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { getLatestVersion, getLatestVersionBatch, getVersions, getVersionsBatch } from '../src/api'
 
-const fastApiMocks = vi.hoisted(() => ({
+const defaultRegistryApiMocks = vi.hoisted(() => ({
   getLatestVersion: vi.fn(),
   getLatestVersionBatch: vi.fn(),
   getVersions: vi.fn(),
@@ -17,10 +17,10 @@ vi.mock('fast-npm-meta', async (importActual) => {
 
   return {
     ...actual,
-    getLatestVersion: fastApiMocks.getLatestVersion,
-    getLatestVersionBatch: fastApiMocks.getLatestVersionBatch,
-    getVersions: fastApiMocks.getVersions,
-    getVersionsBatch: fastApiMocks.getVersionsBatch,
+    getLatestVersion: defaultRegistryApiMocks.getLatestVersion,
+    getLatestVersionBatch: defaultRegistryApiMocks.getLatestVersionBatch,
+    getVersions: defaultRegistryApiMocks.getVersions,
+    getVersionsBatch: defaultRegistryApiMocks.getVersionsBatch,
   }
 })
 
@@ -69,7 +69,7 @@ describe('api', () => {
       lastSynced: 1774881382894,
     }
 
-    fastApiMocks.getLatestVersion.mockResolvedValueOnce(sentinel)
+    defaultRegistryApiMocks.getLatestVersion.mockResolvedValueOnce(sentinel)
 
     const result = await getLatestVersion('react', {
       cwd: project,
@@ -77,7 +77,7 @@ describe('api', () => {
     })
 
     expect(result).toEqual(sentinel)
-    expect(fastApiMocks.getLatestVersion).toHaveBeenCalledWith('react', {})
+    expect(defaultRegistryApiMocks.getLatestVersion).toHaveBeenCalledWith('react', {})
   })
 
   it('delegates getVersionsBatch to fast-npm-meta when every package uses the default registry', async () => {
@@ -97,7 +97,7 @@ describe('api', () => {
       },
     ]
 
-    fastApiMocks.getVersionsBatch.mockResolvedValueOnce(sentinel)
+    defaultRegistryApiMocks.getVersionsBatch.mockResolvedValueOnce(sentinel)
 
     const result = await getVersionsBatch(['react'], {
       cwd: project,
@@ -106,7 +106,7 @@ describe('api', () => {
     })
 
     expect(result).toEqual(sentinel)
-    expect(fastApiMocks.getVersionsBatch).toHaveBeenCalledWith(['react'], { metadata: false })
+    expect(defaultRegistryApiMocks.getVersionsBatch).toHaveBeenCalledWith(['react'], { metadata: false })
   })
 
   it('fetches custom scoped registries directly and normalizes latest-version metadata', async () => {
@@ -168,7 +168,7 @@ describe('api', () => {
       engines: { node: '>=18' },
       integrity: 'sha512-1.2.0',
     })
-    expect(fastApiMocks.getLatestVersion).not.toHaveBeenCalled()
+    expect(defaultRegistryApiMocks.getLatestVersion).not.toHaveBeenCalled()
   })
 
   it('returns direct registry versions metadata in the fast-npm-meta shape', async () => {
@@ -227,6 +227,115 @@ describe('api', () => {
     })
   })
 
+  it('keeps exact-version getVersions behavior aligned with fast-npm-meta for custom registries', async () => {
+    const { home, project } = createTempWorkspace()
+
+    writeFileSync(join(project, '.npmrc'), 'registry=https://private.example/npm/\n')
+
+    const result = await getVersions('demo@1.2.0', {
+      cwd: project,
+      env: { HOME: home },
+      fetch: vi.fn(async () => createPackumentResponse({
+        'name': 'demo',
+        'dist-tags': {
+          latest: '2.0.0',
+        },
+        'versions': {
+          '1.0.0': {},
+          '1.2.0': {},
+          '2.0.0': {},
+        },
+        'time': {
+          'created': '2024-01-01T00:00:00.000Z',
+          'modified': '2024-06-01T00:00:00.000Z',
+          '1.0.0': '2024-01-02T00:00:00.000Z',
+          '1.2.0': '2024-03-01T00:00:00.000Z',
+          '2.0.0': '2024-05-01T00:00:00.000Z',
+        },
+      })),
+    })
+
+    expect(result).toEqual({
+      name: 'demo',
+      specifier: '1.2.0',
+      distTags: {
+        latest: '2.0.0',
+      },
+      versions: ['1.0.0', '1.2.0', '2.0.0'],
+      time: {
+        'created': '2024-01-01T00:00:00.000Z',
+        'modified': '2024-06-01T00:00:00.000Z',
+        '1.0.0': '2024-01-02T00:00:00.000Z',
+        '1.2.0': '2024-03-01T00:00:00.000Z',
+        '2.0.0': '2024-05-01T00:00:00.000Z',
+      },
+      lastSynced: expect.any(Number),
+    })
+  })
+
+  it('retries custom registry fetches when retry is enabled', async () => {
+    const { home, project } = createTempWorkspace()
+
+    writeFileSync(join(project, '.npmrc'), 'registry=https://private.example/npm/\n')
+
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new TypeError('fetch failed'))
+      .mockResolvedValueOnce(createPackumentResponse({
+        'name': 'demo',
+        'dist-tags': {
+          latest: '1.0.0',
+        },
+        'versions': {
+          '1.0.0': {},
+        },
+        'time': {
+          'created': '2024-01-01T00:00:00.000Z',
+          'modified': '2024-01-02T00:00:00.000Z',
+          '1.0.0': '2024-01-02T00:00:00.000Z',
+        },
+      }))
+
+    const result = await getLatestVersion('demo', {
+      cwd: project,
+      env: { HOME: home },
+      fetch: fetchMock,
+      retry: {
+        retries: 1,
+        factor: 1,
+        minTimeout: 0,
+        maxTimeout: 0,
+        randomize: false,
+      },
+    })
+
+    expect(result).toEqual({
+      name: 'demo',
+      specifier: 'latest',
+      version: '1.0.0',
+      publishedAt: '2024-01-02T00:00:00.000Z',
+      lastSynced: expect.any(Number),
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not retry custom registry fetches when retry is false', async () => {
+    const { home, project } = createTempWorkspace()
+
+    writeFileSync(join(project, '.npmrc'), 'registry=https://private.example/npm/\n')
+
+    const fetchMock = vi.fn<typeof fetch>().mockRejectedValue(new TypeError('fetch failed'))
+
+    await expect(() => getLatestVersion('demo', {
+      cwd: project,
+      env: { HOME: home },
+      fetch: fetchMock,
+      retry: false,
+    })).rejects.toThrowError('fetch failed')
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps mixed batch requests working across default and custom registries', async () => {
     const { home, project } = createTempWorkspace()
 
@@ -234,7 +343,7 @@ describe('api', () => {
       '@demo:registry=https://private.example/npm/',
     ].join('\n'))
 
-    fastApiMocks.getLatestVersion.mockResolvedValueOnce({
+    defaultRegistryApiMocks.getLatestVersion.mockResolvedValueOnce({
       name: 'react',
       specifier: 'latest',
       version: '19.2.4',
@@ -281,7 +390,7 @@ describe('api', () => {
         lastSynced: expect.any(Number),
       },
     ])
-    expect(fastApiMocks.getLatestVersion).toHaveBeenCalledTimes(1)
+    expect(defaultRegistryApiMocks.getLatestVersion).toHaveBeenCalledTimes(1)
   })
 
   it('returns fast-compatible error objects for direct registry 404 responses when throw is false', async () => {

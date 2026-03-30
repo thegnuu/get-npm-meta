@@ -1,4 +1,5 @@
 import type {
+  FetchOptions,
   GetLatestVersionOptions,
   GetVersionsOptions,
   InferGetLatestVersionResult,
@@ -9,9 +10,12 @@ import type {
   PackageVersionsInfoWithMetadata,
   ResolvedPackageVersion,
   ResolvedPackageVersionWithMetadata,
+  RetryOptions,
 } from '../types'
 import type { PackageContext } from './context'
-import { maxSatisfying, satisfies, validRange } from 'semver-es'
+import pRetry from 'p-retry'
+import { maxSatisfying, satisfies, valid, validRange } from 'semver-es'
+import { DEFAULT_RETRY_OPTIONS } from '../constants'
 
 interface NpmPackument {
   'dist-tags'?: Record<string, string>
@@ -35,9 +39,13 @@ export async function getLatestVersionFromRegistry<Metadata extends boolean = fa
   context: PackageContext,
   options: GetLatestVersionOptions<Metadata, Throw> = {},
 ): Promise<InferGetLatestVersionResult<Metadata, Throw>> {
-  const packument = await fetchPackument(context, options)
-  if (isPackageError(packument))
-    return packument as InferGetLatestVersionResult<Metadata, Throw>
+  const packument = await loadPackument(context, options)
+  if (isPackageError(packument)) {
+    if (options.throw === false)
+      return packument as InferGetLatestVersionResult<Metadata, Throw>
+
+    throw new Error(packument.error)
+  }
 
   const versions = packument.versions ?? {}
   const distTags = toDistTags(packument['dist-tags'])
@@ -68,16 +76,20 @@ export async function getVersionsFromRegistry<Metadata extends boolean = false, 
   context: PackageContext,
   options: GetVersionsOptions<Metadata, Throw> = {},
 ): Promise<InferGetVersionsResult<Metadata, Throw>> {
-  const packument = await fetchPackument(context, options)
-  if (isPackageError(packument))
-    return packument as InferGetVersionsResult<Metadata, Throw>
+  const packument = await loadPackument(context, options)
+  if (isPackageError(packument)) {
+    if (options.throw === false)
+      return packument as InferGetVersionsResult<Metadata, Throw>
+
+    throw new Error(packument.error)
+  }
 
   const versions = packument.versions ?? {}
   const distTags = toDistTags(packument['dist-tags'])
   const time = packument.time ?? {}
   const specifier = context.parsed.rawSpec || '*'
   const lastSynced = Date.now()
-  const selectedVersions = filterVersionsBySpecifier(Object.keys(versions), versions, distTags, specifier, options.loose)
+  const selectedVersions = filterVersionsBySpecifier(Object.keys(versions), distTags, specifier, options.loose)
   const filteredVersions = filterVersionsByDate(selectedVersions, time, options.after)
 
   if (options.metadata) {
@@ -118,9 +130,9 @@ export async function getVersionsFromRegistry<Metadata extends boolean = false, 
   return result as InferGetVersionsResult<Metadata, Throw>
 }
 
-async function fetchPackument<Throw extends boolean>(
+async function fetchPackument(
   context: PackageContext,
-  options: { fetch?: typeof fetch, throw?: Throw },
+  options: Pick<FetchOptions, 'fetch'>,
 ): Promise<NpmPackument | PackageError> {
   const fetchApi = options.fetch ?? fetch
   const url = new URL(context.parsed.escapedName, context.registry)
@@ -141,15 +153,22 @@ async function fetchPackument<Throw extends boolean>(
   const response = await fetchApi(url, { headers })
 
   if (!response.ok) {
-    const error = toPackageError(context.parsed.name, url, response.status, response.statusText)
-
-    if (options.throw === false)
-      return error
-
-    throw new Error(error.error)
+    return toPackageError(context.parsed.name, url, response.status, response.statusText)
   }
 
   return response.json() as Promise<NpmPackument>
+}
+
+async function loadPackument(
+  context: PackageContext,
+  options: Pick<FetchOptions, 'fetch'> & { retry?: RetryOptions | number | false },
+): Promise<NpmPackument | PackageError> {
+  const retryOptions = normalizeRetryOptions(options.retry)
+  const fetchPackumentFn = (): Promise<NpmPackument | PackageError> => fetchPackument(context, options)
+
+  return retryOptions === false
+    ? fetchPackumentFn()
+    : pRetry(fetchPackumentFn, retryOptions)
 }
 
 function filterVersionsByDate(versions: string[], time: Record<string, string>, after?: string): string[] {
@@ -171,7 +190,6 @@ function filterVersionsByDate(versions: string[], time: Record<string, string>, 
 
 function filterVersionsBySpecifier(
   availableVersions: string[],
-  versions: Record<string, NpmPackumentVersion>,
   distTags: Record<string, string>,
   specifier: string,
   loose?: boolean,
@@ -183,14 +201,14 @@ function filterVersionsBySpecifier(
   if (taggedVersion)
     return availableVersions.includes(taggedVersion) ? [taggedVersion] : []
 
+  if (valid(specifier))
+    return availableVersions
+
   if (validRange(specifier)) {
     return availableVersions.filter(version =>
       satisfies(version, specifier, { includePrerelease: true, loose: loose ?? false }),
     )
   }
-
-  if (versions[specifier])
-    return [specifier]
 
   return availableVersions
 }
@@ -215,6 +233,20 @@ function resolveLatestVersion(
     return maxSatisfying(availableVersions, specifier) ?? null
 
   return null
+}
+
+function normalizeRetryOptions(retry?: RetryOptions | number | false): RetryOptions | false {
+  if (retry === false)
+    return false
+
+  if (typeof retry === 'number') {
+    return {
+      ...DEFAULT_RETRY_OPTIONS,
+      retries: retry,
+    }
+  }
+
+  return retry ?? DEFAULT_RETRY_OPTIONS
 }
 
 function toDistTags(distTags?: Record<string, string>): Record<string, string> & { latest: string } {

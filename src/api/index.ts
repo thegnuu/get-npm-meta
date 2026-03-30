@@ -6,10 +6,10 @@ import type {
   NpmConfigOptions,
 } from '../types'
 import {
-  getLatestVersion as getFastLatestVersion,
-  getLatestVersionBatch as getFastLatestVersionBatch,
-  getVersions as getFastVersions,
-  getVersionsBatch as getFastVersionsBatch,
+  getLatestVersion as getDefaultLatestVersion,
+  getLatestVersionBatch as getDefaultLatestVersionBatch,
+  getVersions as getDefaultVersions,
+  getVersionsBatch as getDefaultVersionsBatch,
 } from 'fast-npm-meta'
 import { isDefaultRegistry, resolvePackageContexts } from './context'
 import { getLatestVersionFromRegistry, getVersionsFromRegistry } from './direct'
@@ -30,9 +30,9 @@ export async function getLatestVersionBatch<Metadata extends boolean = false, Th
   const contexts = resolvePackageContexts(specs, options)
 
   if (contexts.every(context => isDefaultRegistry(context.registry))) {
-    return getFastLatestVersionBatch(
+    return getDefaultLatestVersionBatch(
       contexts.map(context => context.parsed.raw),
-      toFastOptions(options),
+      toDefaultOptions(options),
     ) as Promise<InferGetLatestVersionResult<Metadata, Throw>[]>
   }
 
@@ -55,9 +55,9 @@ export async function getVersionsBatch<Metadata extends boolean = false, Throw e
   const contexts = resolvePackageContexts(specs, options)
 
   if (contexts.every(context => isDefaultRegistry(context.registry))) {
-    return getFastVersionsBatch(
+    return getDefaultVersionsBatch(
       contexts.map(context => context.parsed.raw),
-      toFastOptions(options),
+      toDefaultOptions(options),
     ) as Promise<InferGetVersionsResult<Metadata, Throw>[]>
   }
 
@@ -69,7 +69,7 @@ function getLatestVersionForContext<Metadata extends boolean, Throw extends bool
   options: GetLatestVersionOptions<Metadata, Throw>,
 ) {
   if (isDefaultRegistry(context.registry))
-    return getFastLatestVersion(context.parsed.raw, toFastOptions(options)) as Promise<InferGetLatestVersionResult<Metadata, Throw>>
+    return getDefaultLatestVersion(context.parsed.raw, toDefaultOptions(options)) as Promise<InferGetLatestVersionResult<Metadata, Throw>>
 
   return getLatestVersionFromRegistry(context, options)
 }
@@ -79,19 +79,19 @@ function getVersionsForContext<Metadata extends boolean, Throw extends boolean>(
   options: GetVersionsOptions<Metadata, Throw>,
 ) {
   if (isDefaultRegistry(context.registry))
-    return getFastVersions(context.parsed.raw, toFastOptions(options)) as Promise<InferGetVersionsResult<Metadata, Throw>>
+    return getDefaultVersions(context.parsed.raw, toDefaultOptions(options)) as Promise<InferGetVersionsResult<Metadata, Throw>>
 
   return getVersionsFromRegistry(context, options)
 }
 
-function toFastOptions<T extends NpmConfigOptions>(options: T): Omit<T, keyof NpmConfigOptions> {
+function toDefaultOptions<T extends NpmConfigOptions>(options: T): Omit<T, keyof NpmConfigOptions> {
   const {
     cwd: _cwd,
     env: _env,
     userConfigPath: _userConfigPath,
     projectConfigPath: _projectConfigPath,
-    ...fastOptions
+    ...defaultOptions
   } = options
 
-  return fastOptions
+  return defaultOptions
 }

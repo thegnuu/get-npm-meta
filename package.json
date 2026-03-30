@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@10.33.0",
-  "description": "",
+  "description": "A minimal, auth-aware npm metadata client with private registry support.",
   "author": "jinghaihan",
   "license": "MIT",
   "homepage": "https://github.com/jinghaihan/get-npm-meta#readme",
@@ -70,7 +70,9 @@
     "*": "eslint --fix"
   },
   "inlinedDependencies": {
-    "semver-es": "^0.1.0",
+    "is-network-error": "1.3.1",
+    "p-retry": "8.0.0",
+    "semver-es": "0.1.0",
     "validate-npm-package-name": "7.0.2"
   }
 }
