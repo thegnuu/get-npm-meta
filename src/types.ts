@@ -116,7 +116,38 @@ export interface RegistryAuthConfig {
 }
 
 export interface NpaOptions {
+  /**
+   * Raw package spec string to parse.
+   * Supported inputs are registry package specs such as `foo`,
+   * `foo@latest`, `foo@1.2.3`, and `@scope/foo@beta`.
+   */
+  spec: string
+}
 
+export interface NpaResult {
+  /**
+   * Original package spec string after trimming surrounding whitespace.
+   */
+  raw: string
+  /**
+   * Normalized package name, for example `foo` or `@scope/foo`.
+   */
+  name: string
+  /**
+   * URL-safe package name used by npm-compatible registries.
+   * Scoped package slashes are encoded as `%2f`.
+   */
+  escapedName: string
+  /**
+   * Package scope when the package is scoped.
+   */
+  scope?: string
+  /**
+   * Raw version, tag, or range portion after the package name.
+   *
+   * @default `''`
+   */
+  rawSpec: string
 }
 
 export interface RequestOptions {

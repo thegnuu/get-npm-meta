@@ -28,6 +28,10 @@ catalogs:
     typescript:
       specifier: ^6.0.2
       version: 6.0.2
+  inlined:
+    validate-npm-package-name:
+      specifier: ^7.0.2
+      version: 7.0.2
   lint:
     '@octohash/eslint-config':
       specifier: ^0.2.9
@@ -50,11 +54,17 @@ catalogs:
     '@types/node':
       specifier: ^25.5.0
       version: 25.5.0
+    '@types/validate-npm-package-name':
+      specifier: ^4.0.2
+      version: 4.0.2
 
 importers:
 
   .:
     dependencies:
+      '@types/validate-npm-package-name':
+        specifier: catalog:types
+        version: 4.0.2
       fast-npm-meta:
         specifier: catalog:prod
         version: 1.4.2
@@ -92,6 +102,9 @@ importers:
       typescript:
         specifier: catalog:dev
         version: 6.0.2
+      validate-npm-package-name:
+        specifier: catalog:inlined
+        version: 7.0.2
       vitest:
         specifier: catalog:test
         version: 4.1.2(@types/node@25.5.0)(vite@7.1.11(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
@@ -947,6 +960,9 @@ packages:
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
+
+  '@types/validate-npm-package-name@4.0.2':
+    resolution: {integrity: sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw==}
 
   '@typescript-eslint/eslint-plugin@8.57.2':
     resolution: {integrity: sha512-NZZgp0Fm2IkD+La5PR81sd+g+8oS6JwJje+aRWsDocxHkjyRw0J5L5ZTlN3LI1LlOcGL7ph3eaIUmTXMIjLk0w==}
@@ -2368,6 +2384,10 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
+  validate-npm-package-name@7.0.2:
+    resolution: {integrity: sha512-hVDIBwsRruT73PbK7uP5ebUt+ezEtCmzZz3F59BSr2F6OVFnJ/6h8liuvdLrQ88Xmnk6/+xGGuq+pG9WwTuy3A==}
+    engines: {node: ^20.17.0 || >=22.9.0}
+
   vite@7.1.11:
     resolution: {integrity: sha512-uzcxnSDVjAopEUjljkWh8EIrg6tlzrjFUfMcR1EVsRDGwf/ccef0qQPRyOrROwhrTDaApueq+ja+KLPlzR/zdg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3110,6 +3130,8 @@ snapshots:
       undici-types: 7.18.2
 
   '@types/unist@3.0.3': {}
+
+  '@types/validate-npm-package-name@4.0.2': {}
 
   '@typescript-eslint/eslint-plugin@8.57.2(@typescript-eslint/parser@8.57.2(eslint@10.1.0(jiti@2.6.1))(typescript@6.0.2))(eslint@10.1.0(jiti@2.6.1))(typescript@6.0.2)':
     dependencies:
@@ -4874,6 +4896,8 @@ snapshots:
       punycode: 2.3.1
 
   util-deprecate@1.0.2: {}
+
+  validate-npm-package-name@7.0.2: {}
 
   vite@7.1.11(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:

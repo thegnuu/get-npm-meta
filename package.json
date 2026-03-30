@@ -45,7 +45,8 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "fast-npm-meta": "catalog:prod"
+    "fast-npm-meta": "catalog:prod",
+    "@types/validate-npm-package-name": "catalog:types"
   },
   "devDependencies": {
     "tsdown": "catalog:build",
@@ -55,6 +56,7 @@
     "taze": "catalog:dev",
     "tsx": "catalog:dev",
     "typescript": "catalog:dev",
+    "validate-npm-package-name": "catalog:inlined",
     "@octohash/eslint-config": "catalog:lint",
     "eslint": "catalog:lint",
     "lint-staged": "catalog:lint",
@@ -66,5 +68,8 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
+  },
+  "inlinedDependencies": {
+    "validate-npm-package-name": "7.0.2"
   }
 }
