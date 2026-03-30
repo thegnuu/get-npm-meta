@@ -16,6 +16,7 @@ import type { PackageContext } from './context'
 import pRetry from 'p-retry'
 import { maxSatisfying, satisfies, valid, validRange } from 'semver-es'
 import { DEFAULT_RETRY_OPTIONS } from '../constants'
+import { getPackumentVersionProvenance } from '../helpers'
 
 interface NpmPackument {
   'dist-tags'?: Record<string, string>
@@ -27,6 +28,9 @@ interface NpmPackument {
 interface NpmPackumentVersion {
   deprecated?: string
   dist?: {
+    attestations?: {
+      provenance?: unknown
+    }
     integrity?: string
     provenance?: 'trustedPublisher' | boolean
   }
@@ -269,7 +273,7 @@ function toPackageVersionMeta(version: NpmPackumentVersion, time?: string): Pack
     time,
     engines: version.engines,
     deprecated: version.deprecated,
-    provenance: version.provenance ?? version.dist?.provenance,
+    provenance: getPackumentVersionProvenance(version),
     integrity: version.integrity ?? version.dist?.integrity,
   }
 }

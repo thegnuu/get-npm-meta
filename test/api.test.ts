@@ -227,6 +227,65 @@ describe('api', () => {
     })
   })
 
+  it('normalizes provenance from registry attestation metadata', async () => {
+    const { home, project } = createTempWorkspace()
+
+    writeFileSync(join(project, '.npmrc'), 'registry=https://private.example/npm/\n')
+
+    const result = await getVersions('demo', {
+      cwd: project,
+      env: { HOME: home },
+      fetch: vi.fn(async () => createPackumentResponse({
+        'name': 'demo',
+        'dist-tags': {
+          latest: '1.1.0',
+        },
+        'versions': {
+          '1.0.0': {
+            dist: {
+              attestations: {
+                provenance: {
+                  predicateType: 'https://slsa.dev/provenance/v1',
+                },
+              },
+            },
+          },
+          '1.1.0': {
+            provenance: 'trustedPublisher',
+          },
+        },
+        'time': {
+          'created': '2024-01-01T00:00:00.000Z',
+          'modified': '2024-06-01T00:00:00.000Z',
+          '1.0.0': '2024-01-02T00:00:00.000Z',
+          '1.1.0': '2024-05-01T00:00:00.000Z',
+        },
+      })),
+      metadata: true,
+    })
+
+    expect(result).toEqual({
+      name: 'demo',
+      specifier: '*',
+      distTags: {
+        latest: '1.1.0',
+      },
+      versionsMeta: {
+        '1.0.0': {
+          time: '2024-01-02T00:00:00.000Z',
+          provenance: true,
+        },
+        '1.1.0': {
+          time: '2024-05-01T00:00:00.000Z',
+          provenance: 'trustedPublisher',
+        },
+      },
+      timeCreated: '2024-01-01T00:00:00.000Z',
+      timeModified: '2024-06-01T00:00:00.000Z',
+      lastSynced: expect.any(Number),
+    })
+  })
+
   it('keeps exact-version getVersions behavior aligned with fast-npm-meta for custom registries', async () => {
     const { home, project } = createTempWorkspace()
 
