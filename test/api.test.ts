@@ -331,7 +331,7 @@ describe('api', () => {
       env: { HOME: home },
       fetch: fetchMock,
       retry: false,
-    })).rejects.toThrowError('fetch failed')
+    })).rejects.toThrow('fetch failed')
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })

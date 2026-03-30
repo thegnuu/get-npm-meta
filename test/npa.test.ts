@@ -43,37 +43,37 @@ describe('parseNpmSpec', () => {
   })
 
   it('rejects file protocol specs', () => {
-    expect(() => parseNpmSpec({ spec: 'file:./pkg.tgz' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: 'file:./pkg.tgz' })).toThrow(
       'Unsupported file package spec "file:./pkg.tgz" for get-npm-meta.',
     )
   })
 
   it('rejects npm alias specs', () => {
-    expect(() => parseNpmSpec({ spec: 'npm:react@18' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: 'npm:react@18' })).toThrow(
       'Unsupported npm alias package spec "npm:react@18" for get-npm-meta.',
     )
   })
 
   it('rejects local path specs', () => {
-    expect(() => parseNpmSpec({ spec: './local-package' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: './local-package' })).toThrow(
       'Unsupported local path package spec "./local-package" for get-npm-meta.',
     )
   })
 
   it('rejects url specs', () => {
-    expect(() => parseNpmSpec({ spec: 'https://registry.npmjs.org/foo/-/foo-1.0.0.tgz' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: 'https://registry.npmjs.org/foo/-/foo-1.0.0.tgz' })).toThrow(
       'Unsupported url package spec "https://registry.npmjs.org/foo/-/foo-1.0.0.tgz" for get-npm-meta.',
     )
   })
 
   it('rejects git specs', () => {
-    expect(() => parseNpmSpec({ spec: 'git@github.com:npm/cli.git' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: 'git@github.com:npm/cli.git' })).toThrow(
       'Unsupported git package spec "git@github.com:npm/cli.git" for get-npm-meta.',
     )
   })
 
   it('rejects invalid scoped package names', () => {
-    expect(() => parseNpmSpec({ spec: '@scope/' })).toThrowError(
+    expect(() => parseNpmSpec({ spec: '@scope/' })).toThrow(
       'Invalid scoped package spec "@scope/".',
     )
   })

@@ -1,14 +1,64 @@
 # get-npm-meta
 
 [![npm version][npm-version-src]][npm-version-href]
-[![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![bundle][bundle-src]][bundle-href]
 [![JSDocs][jsdocs-src]][jsdocs-href]
 [![License][license-src]][license-href]
 
+Minimal, auth-aware npm metadata utilities for projects that rely on `.npmrc`, scoped registries, or private registries.
+
+```sh
+pnpm add get-npm-meta
+```
+
 ## Usage
 
-**No data**
+```ts
+import { getLatestVersion, getVersions } from 'get-npm-meta'
+
+const react = await getLatestVersion('react')
+
+const internal = await getLatestVersion('@org/pkg@^1', {
+  cwd: process.cwd(),
+  metadata: true,
+})
+
+const versions = await getVersions('@org/pkg', {
+  cwd: process.cwd(),
+  metadata: true,
+})
+```
+
+`get-npm-meta` reads user and project `.npmrc`, applies `npm_config_*` overrides, resolves scoped registries, and forwards registry auth when needed.
+
+Supported specs are registry package specs such as `foo`, `foo@latest`, `foo@^1`, and `@scope/foo@beta`.
+
+## API
+
+> [!TIP]
+> The request options extend `fast-npm-meta` with npm config loading controls: `cwd`, `env`, `userConfigPath`, and `projectConfigPath`.
+
+- `getLatestVersion(spec, options)`
+- `getLatestVersionBatch(specs, options)`
+- `getVersions(spec, options)`
+- `getVersionsBatch(specs, options)`
+- `loadNpmConfig(options)`
+- `parseNpmSpec({ spec })`
+
+## Compared to fast-npm-meta
+
+[`fast-npm-meta`](https://github.com/antfu/fast-npm-meta) is the recommended choice when you only use the default npm registry.
+
+`get-npm-meta` is for npm-style registry resolution: it loads `.npmrc`, picks scoped registries, reuses auth config, and keeps the return shape aligned with `fast-npm-meta` where practical.
+
+When a package resolves to the default npm registry (`https://registry.npmjs.org/`), this package delegates the request to `fast-npm-meta`.
+
+## Credits
+
+- [`npm/cli`](https://github.com/npm/cli)
+- [`npm/npm-package-arg`](https://github.com/npm/npm-package-arg)
+- [`npm/npm-registry-fetch`](https://github.com/npm/npm-registry-fetch)
+- [`fast-npm-meta`](https://github.com/antfu/fast-npm-meta)
 
 ## License
 
