@@ -44,6 +44,9 @@
     "prepare": "simple-git-hooks",
     "prepublishOnly": "pnpm build"
   },
+  "dependencies": {
+    "fast-npm-meta": "catalog:prod"
+  },
   "devDependencies": {
     "tsdown": "catalog:build",
     "bumpp": "catalog:dev",

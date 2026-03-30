@@ -13,6 +13,8 @@ catalogs:
     '@octohash/eslint-config': ^0.2.9
     eslint: ^10.1.0
     lint-staged: ^16.4.0
+  prod:
+    fast-npm-meta: ^1.4.2
   test:
     vitest: ^4.1.2
   types:
